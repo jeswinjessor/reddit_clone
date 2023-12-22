@@ -11,10 +11,13 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:fpdart/fpdart.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:reddit_clone/core/constants/constants.dart';
 import 'package:reddit_clone/core/constants/firebase_constants.dart';
+import 'package:reddit_clone/core/failure.dart';
 import 'package:reddit_clone/core/providers/firebase_providers.dart';
+import 'package:reddit_clone/core/type_defs.dart';
 import 'package:reddit_clone/models/user_model.dart';
 
 /// Here we are reading providers from firebase_providers to pass data
@@ -41,7 +44,9 @@ class AuthRepository {
   CollectionReference get _users =>
       _firestore.collection(FirebaseConstants.usersCollection);
 
-  void signInWithGoogle() async {
+// We are using fpdart to handle errors,
+// in the below futureEither defined in the type_defs.dart and failure.dart
+  FutureEither<UserModel> signInWithGoogle() async {
     try {
       // SignIn with Google
       final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
@@ -54,7 +59,7 @@ class AuthRepository {
       UserCredential userCredential =
           await _auth.signInWithCredential(credential);
 
-      UserModel userModel;
+      late UserModel userModel;
 
       if (userCredential.additionalUserInfo!.isNewUser) {
         userModel = UserModel(
@@ -67,9 +72,21 @@ class AuthRepository {
             karma: 0,
             awards: []);
 
+        // Save Data to Firestore
         await _users.doc(userCredential.user!.uid).set(userModel.toMap());
       }
-      // Save Data to Firestore
-    } catch (E) {}
+      // the reason why we use right, because when we handle error with
+      // fpdart right is success and left is failure
+      return right(userModel);
+    } on FirebaseException catch (e) {
+      throw e.message!;
+    } catch (e) {
+// old
+      // since we are throwing e itself we can just use rethrow
+      // rethrow;
+// new
+      // we are returning left to signal fpdart about the failure
+      return left(Failure(e.toString()));
+    }
   }
 }

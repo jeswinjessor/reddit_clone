@@ -12,7 +12,9 @@
 /// Provider ref help us access the other providers and give us buch of methods
 /// to talk to other providers.
 
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:reddit_clone/core/utils.dart';
 import 'package:reddit_clone/features/auth/repository/auth_repository.dart';
 
 // So now here we are reading the authRepositoryProvider
@@ -25,7 +27,12 @@ class AuthController {
   AuthController({required AuthRepository authRepository})
       : _authRepository = authRepository;
 
-  void signInWithGoogle() {
-    _authRepository.signInWithGoogle();
+  void signInWithGoogle(BuildContext context) async {
+    final user = await _authRepository.signInWithGoogle();
+    // By using fold we can access error handling
+    // from inside auth_controller
+    // l(left) - failiure, r(right) - success
+    // showSnackBar is coming from utils.dart
+    user.fold((l) => showSnackBar(context, l.message), (r) => null);
   }
 }

@@ -23,8 +23,8 @@ class SignInButton extends ConsumerWidget {
   // In future if we desided to change the style of the button we can do it by simply
   // deleting the whole code present below without rewriting the actual function.
 
-  void signInWithGoogle(WidgetRef ref) {
-    ref.read(authControllerProvider).signInWithGoogle();
+  void signInWithGoogle(BuildContext context, WidgetRef ref) {
+    ref.read(authControllerProvider).signInWithGoogle(context);
   }
 
   @override
@@ -32,7 +32,7 @@ class SignInButton extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.all(18.0),
       child: ElevatedButton.icon(
-          onPressed: () => signInWithGoogle(ref),
+          onPressed: () => signInWithGoogle(context, ref),
           icon: Image.asset(
             Constants.googlePath,
             width: 35,
