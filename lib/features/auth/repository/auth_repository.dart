@@ -41,7 +41,7 @@ class AuthRepository {
         _firestore = firestore,
         _googleSignIn = googleSignIn;
 
-  CollectionReference get _users =>
+  CollectionReference get _usersCollection =>
       _firestore.collection(FirebaseConstants.usersCollection);
 
 // We are using fpdart to handle errors,
@@ -59,7 +59,7 @@ class AuthRepository {
       UserCredential userCredential =
           await _auth.signInWithCredential(credential);
 
-      late UserModel userModel;
+      UserModel userModel;
 
       if (userCredential.additionalUserInfo!.isNewUser) {
         userModel = UserModel(
@@ -73,7 +73,13 @@ class AuthRepository {
             awards: []);
 
         // Save Data to Firestore
-        await _users.doc(userCredential.user!.uid).set(userModel.toMap());
+        await _usersCollection
+            .doc(userCredential.user!.uid)
+            .set(userModel.toMap());
+      } else {
+        // Stream is a stream of values coming together,
+        // following code will consume the first value of the stream
+        userModel = await getUserData(userCredential.user!.uid).first;
       }
       // the reason why we use right, because when we handle error with
       // fpdart right is success and left is failure
@@ -88,5 +94,13 @@ class AuthRepository {
       // we are returning left to signal fpdart about the failure
       return left(Failure(e.toString()));
     }
+  }
+
+  // Creating a function to stream user data from firestore to use inside
+  // the else statement of isNewUser.
+  // Stream will provide real time updates
+  Stream<UserModel> getUserData(String uid) {
+    return _usersCollection.doc(uid).snapshots().map(
+        (event) => UserModel.fromMap(event.data() as Map<String, dynamic>));
   }
 }
