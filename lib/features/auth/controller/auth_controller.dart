@@ -17,22 +17,42 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reddit_clone/core/utils.dart';
 import 'package:reddit_clone/features/auth/repository/auth_repository.dart';
 
-// So now here we are reading the authRepositoryProvider
+import '../../../models/user_model.dart';
 
-final authControllerProvider = Provider(
-    (ref) => AuthController(authRepository: ref.read(authRepositoryProvider)));
+// Here we are going to use StateProvider because we need to change the value
+// of the userProvider
+final userProvider = StateProvider<UserModel?>((ref) => null);
 
-class AuthController {
+// So now here we are watching the authRepositoryProvider for any changes
+// we are specifing the type of StateNotifierProvider to <AuthController, bool>
+// bool will be used to identify if the page is loading or not
+final authControllerProvider = StateNotifierProvider<AuthController, bool>(
+    (ref) => AuthController(
+        authRepository: ref.watch(authRepositoryProvider), ref: ref));
+
+// we are extending AuthController class using stateNotifier
+// by using stateNotifier we donot need an another listener as the
+// stateNotifier will take of it .
+class AuthController extends StateNotifier<bool> {
   final AuthRepository _authRepository;
-  AuthController({required AuthRepository authRepository})
-      : _authRepository = authRepository;
+  final Ref _ref;
+  AuthController({required AuthRepository authRepository, required Ref ref})
+      : _authRepository = authRepository,
+        _ref = ref,
+        //super represents the loading part of the state
+        super(false);
 
   void signInWithGoogle(BuildContext context) async {
+    state = true;
     final user = await _authRepository.signInWithGoogle();
+    state = false;
     // By using fold we can access error handling
     // from inside auth_controller
     // l(left) - failiure, r(right) - success
     // showSnackBar is coming from utils.dart
-    user.fold((l) => showSnackBar(context, l.message), (r) => null);
+    user.fold(
+        (l) => showSnackBar(context, l.message),
+        (userModel) =>
+            _ref.read(userProvider.notifier).update((state) => userModel));
   }
 }

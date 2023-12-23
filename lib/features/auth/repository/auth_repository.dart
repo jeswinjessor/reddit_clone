@@ -22,7 +22,8 @@ import 'package:reddit_clone/models/user_model.dart';
 
 /// Here we are reading providers from firebase_providers to pass data
 /// to the authRepositoryProvider
-
+/// since this provider is returing an AuthRepository the type of the
+/// provider is AuthRepository.
 final authRepositoryProvider = Provider((ref) => AuthRepository(
     firestore: ref.read(firestoreProvider),
     auth: ref.read(authProvider),
