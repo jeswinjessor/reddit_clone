@@ -45,6 +45,10 @@ class AuthRepository {
   CollectionReference get _usersCollection =>
       _firestore.collection(FirebaseConstants.usersCollection);
 
+  // Below is the authStateChange function provided by firebse, which
+  // let's us know all the changes in the user auth state.
+  Stream<User?> get authStateChange => _auth.authStateChanges();
+
 // We are using fpdart to handle errors,
 // in the below futureEither defined in the type_defs.dart and failure.dart
   FutureEither<UserModel> signInWithGoogle() async {
