@@ -14,7 +14,9 @@ class HomeScreen extends ConsumerWidget {
 
     return Scaffold(
       body: Center(
-        child: Text(user.karma.toString()),
+        child: Text(
+          user.name,
+        ),
       ),
     );
   }
